@@ -1,0 +1,52 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List 
+    	java.util.Map		
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    
+    boolean redirectOut = ("true").equals(ElementParameterParser.getValue(node, "__SYSTEMOUT__"));
+    String appendOut = ((String)ElementParameterParser.getValue(node, "__APPENDSYSTEMOUT__"));
+    boolean redirectErr = ("true").equals(ElementParameterParser.getValue(node, "__SYSTEMERR__"));
+    String appendErr = ((String)ElementParameterParser.getValue(node, "__APPENDSYSTEMERR__"));
+    boolean outputDate = ("true").equals(ElementParameterParser.getValue(node, "__OUTPUTDATE__"));
+    String dateCaption = ((String)ElementParameterParser.getValue(node, "__DATECAPTION__"));
+
+	if (redirectOut) {
+		String fileOut = ElementParameterParser.getValue(node, "__SYSTEMOUTFILE__");
+%>
+String fileOutName_<%=cid%> = (new java.io.File(<%=fileOut%>)).getAbsolutePath().replace("\\","/");
+java.io.File fileOut_<%=cid%> = new java.io.File(fileOutName_<%=cid%>);
+System.setOut(new java.io.PrintStream(new java.io.FileOutputStream(fileOut_<%=cid%>, <%=appendOut%>), true));
+<%      if (outputDate) {
+%>
+System.out.println(<%=dateCaption%> + TalendDate.formatDate("yyyy-MM-dd HH:mm:ss", new Date(startTime)) + "");
+<%
+		}
+	}
+	if (redirectErr) {
+		String fileErr = ElementParameterParser.getValue(node, "__SYSTEMERRFILE__");
+%>
+String fileErrName_<%=cid%> = (new java.io.File(<%=fileErr%>)).getAbsolutePath().replace("\\","/");
+java.io.File fileErr_<%=cid%> = new java.io.File(fileErrName_<%=cid%>);
+System.setErr(new java.io.PrintStream(new java.io.FileOutputStream(fileErr_<%=cid%>, <%=appendErr%>), true));
+<%      if (outputDate) {
+%>
+System.err.println(<%=dateCaption%> + TalendDate.formatDate("yyyy-MM-dd HH:mm:ss", new Date(startTime)) + "");
+<%
+		}
+	}
+%>
